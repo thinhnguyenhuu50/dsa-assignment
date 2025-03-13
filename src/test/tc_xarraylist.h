@@ -31,7 +31,7 @@ void xlistDemo3(){
     alist.add(Point(24.6f, 23.1f));  
     
     int idx1 = alist.indexOf(Point(24.6f, 23.1f));
-    int idx2 = alist.indexOf(Point(24.61f, 23.1f));
+    int idx2 = alist.indexOf(Point(23.2f, 25.4f));
     
     cout << "result 1 : " << idx1 << endl;
     cout << "result 2 : " << idx2 << endl;
