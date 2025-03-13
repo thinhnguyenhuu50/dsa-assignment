@@ -1,4 +1,4 @@
-// #include "test/tc_dlinkedlist.h"
+#include "test/tc_dlinkedlist.h"
 // #include "test/tc_inventory.h"
 #include "test/tc_xarraylist.h"
 #include <iomanip>
@@ -9,12 +9,12 @@
 using namespace std;
 
 void (*func_ptr[15])() = {
-    // dlistDemo1,
-    // dlistDemo2,
-    // dlistDemo3,
-    // dlistDemo4,
-    // dlistDemo5,
-    // dlistDemo6,
+    dlistDemo1,
+    dlistDemo2,
+    dlistDemo3,
+    dlistDemo4,
+    dlistDemo5,
+    dlistDemo6,
     xlistDemo1,
     xlistDemo2,
     xlistDemo3,
@@ -31,6 +31,6 @@ void run(int func_idx) {
 }
 
 int main(int argc, char **argv) {
-    xlistDemo4();
+    dlistDemo6();
     return 0;
 }

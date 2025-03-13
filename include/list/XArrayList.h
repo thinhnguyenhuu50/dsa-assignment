@@ -165,9 +165,8 @@ XArrayList<T>::XArrayList(
     void (*deleteUserData)(XArrayList<T> *),
     bool (*itemEqual)(T &, T &),
     int capacity)
-    : capacity(capacity), itemEqual(itemEqual), deleteUserData(deleteUserData), count(0), data(nullptr) {
+    : capacity(capacity), itemEqual(itemEqual), deleteUserData(deleteUserData), count(0), data(new T[capacity]) {
     // TODO
-    data = new T[capacity];
 }
 
 template <class T>
@@ -295,12 +294,10 @@ int XArrayList<T>::size() {
 template <class T>
 void XArrayList<T>::clear() {
     // TODO
-    if (data) {
-        delete[] data;
-        data = new T[5];
-        count = 0;
-        capacity = 5;
-    }
+    removeInternalData();
+    count = 0;
+    capacity = 5;
+    data = new T[capacity];
 }
 
 template <class T>
