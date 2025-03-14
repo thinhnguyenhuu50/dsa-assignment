@@ -95,7 +95,7 @@ void tc_inventory1004(){
     cout << inventory.toString() << endl;
 }
 
-void tc_inventory1004(){
+void tc_inventory1005(){
     InventoryAttribute attrA1("weight", 10);
     InventoryAttribute attrA2("height", 156);
     InventoryAttribute arrA[] = { attrA1, attrA2 };
@@ -128,9 +128,10 @@ void tc_inventory1004(){
     List1D<string> queryResult = inventory.query(1, 10, 20, 30, true);
     cout << "\nQuery result (weight between 10 and 20, quantity >= 30):" << endl;
     cout << queryResult << endl;
+    // cout << queryResult.toString() << endl;
 }
 
-void tc_inventory1005(){
+void tc_inventory1006(){
     InventoryAttribute attrA1("weight", 10);
     InventoryAttribute attrA2("height", 156);
     InventoryAttribute arrA[] = { attrA1, attrA2 };

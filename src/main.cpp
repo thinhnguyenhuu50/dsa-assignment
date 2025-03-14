@@ -1,5 +1,5 @@
 #include "test/tc_dlinkedlist.h"
-// #include "test/tc_inventory.h"
+#include "test/tc_inventory.h"
 #include "test/tc_xarraylist.h"
 #include <iomanip>
 #include <iostream>
