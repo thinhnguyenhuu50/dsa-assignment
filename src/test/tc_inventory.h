@@ -125,9 +125,9 @@ void tc_inventory1005(){
 
     InventoryManager inventory(attributesMatrix, productNames, quantities);
 
-    // List1D<string> queryResult = inventory.query(1, 10, 20, 30, true);
-    // cout << "\nQuery result (weight between 10 and 20, quantity >= 30):" << endl;
-    // cout << queryResult << endl;
+    List1D<string> queryResult = inventory.query(1, 10, 20, 30, true);
+    cout << "\nQuery result (weight between 10 and 20, quantity >= 30):" << endl;
+    cout << queryResult << endl;
 }
 
 void tc_inventory1006(){

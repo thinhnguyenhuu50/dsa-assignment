@@ -32,7 +32,7 @@ public:
 
     // template <typename U>
     // friend ostream &operator<<(ostream &os, const List1D<U> &list);
-    friend ostream &operator<<(ostream &os, const List1D<T> &list);
+    // friend ostream &operator<<(ostream &os, const List1D<T> &list);
 };
 
 // -------------------- List2D --------------------
@@ -179,10 +179,18 @@ void List1D<T>::add(const T &value) {
 template <typename T>
 string List1D<T>::toString() const {
     // TODO
-    if constexpr (std::is_fundamental<T>::value) {
+    // if constexpr (std::is_fundamental<T>::value) {
+    //     return pList->toString();
+    // }
+    // if constexpr (std::is_class<T>::value) {
+    //     return pList->toString([](T &item) -> string {
+    //         return item.toString();
+    //     });
+    // }
+    if constexpr (std::is_convertible<T, string>::value) {
         return pList->toString();
     }
-    if constexpr (std::is_class<T>::value) {
+    else if constexpr (std::is_class<T>::value) {
         return pList->toString([](T &item) -> string {
             return item.toString();
         });
