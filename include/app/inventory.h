@@ -30,8 +30,10 @@ public:
     void add(const T &value);
     string toString() const;
 
-    // template <typename U>
-    // friend ostream &operator<<(ostream &os, const List1D<U> &list);
+    void removeAt(int index);
+
+    template <typename U>
+    friend ostream &operator<<(ostream &os, const List1D<U> &list);
     // friend ostream &operator<<(ostream &os, const List1D<T> &list);
 };
 
@@ -53,9 +55,13 @@ public:
     List1D<T> getRow(int rowIndex) const;
     string toString() const;
 
+    void add(IList<T> *e);
+
+    void removeAt(int rowIndex);
+
     // template <typename U>
     // friend ostream &operator<<(ostream &os, const List2D<U> &matrix);
-    friend ostream &operator<<(ostream &os, const List2D<T> &matrix);
+    // friend ostream &operator<<(ostream &os, const List2D<T> &matrix);
 };
 
 struct InventoryAttribute {
@@ -123,7 +129,7 @@ template <typename T>
 List1D<T>::List1D(int num_elements) {
     // TODO
     pList = new XArrayList<T>();
-    for (int i = 0; i < num_elements; i++) {
+    for (int i = 0; i < num_elements; ++i) {
         pList->add(T());
     }
 }
@@ -132,7 +138,7 @@ template <typename T>
 List1D<T>::List1D(const T *array, int num_elements) {
     // TODO
     pList = new XArrayList<T>();
-    for (int i = 0; i < num_elements; i++) {
+    for (int i = 0; i < num_elements; ++i) {
         pList->add(array[i]);
     }
 }
@@ -141,7 +147,7 @@ template <typename T>
 List1D<T>::List1D(const List1D<T> &other) {
     // TODO
     pList = new XArrayList<T>();
-    for (int i = 0; i < other.size(); i++) {
+    for (int i = 0; i < other.size(); ++i) {
         pList->add(other.get(i));
     }
 }
@@ -179,23 +185,17 @@ void List1D<T>::add(const T &value) {
 template <typename T>
 string List1D<T>::toString() const {
     // TODO
-    // if constexpr (std::is_fundamental<T>::value) {
-    //     return pList->toString();
-    // }
-    // if constexpr (std::is_class<T>::value) {
-    //     return pList->toString([](T &item) -> string {
-    //         return item.toString();
-    //     });
-    // }
-    if constexpr (std::is_convertible<T, string>::value) {
-        return pList->toString();
-    }
-    else if constexpr (std::is_class<T>::value) {
-        return pList->toString([](T &item) -> string {
+    stringstream ss;
+
+    if constexpr (is_base_of_v<InventoryAttribute, T>) {
+        ss << pList->toString([](T &item) -> string {
             return item.toString();
         });
+    } else {
+        ss << pList->toString();
     }
-    return "error at List1D<T>::toString()";
+
+    return ss.str();
 }
 
 template <typename T>
@@ -203,6 +203,11 @@ ostream &operator<<(ostream &os, const List1D<T> &list) {
     // TODO
     os << list.toString();
     return os;
+}
+
+template <typename T>
+void List1D<T>::removeAt(int index) {
+    pList->removeAt(index);
 }
 
 // -------------------- List2D Method Definitions --------------------
@@ -216,9 +221,9 @@ template <typename T>
 List2D<T>::List2D(List1D<T> *array, int num_rows) {
     // TODO
     pMatrix = new XArrayList<IList<T> *>();
-    for (int i = 0; i < num_rows; i++) {
+    for (int i = 0; i < num_rows; ++i) {
         XArrayList<T> *row = new XArrayList<T>();
-        for (int j = 0; j < array[i].size(); j++) {
+        for (int j = 0; j < array[i].size(); ++j) {
             row->add(array[i].get(j));
         }
         pMatrix->add(row);
@@ -229,9 +234,9 @@ template <typename T>
 List2D<T>::List2D(const List2D<T> &other) {
     // TODO
     pMatrix = new XArrayList<IList<T> *>();
-    for (int i = 0; i < other.rows(); i++) {
+    for (int i = 0; i < other.rows(); ++i) {
         XArrayList<T> *row = new XArrayList<T>();
-        for (int j = 0; j < other.pMatrix->get(i)->size(); j++) {
+        for (int j = 0; j < other.pMatrix->get(i)->size(); ++j) {
             row->add(other.pMatrix->get(i)->get(j));
         }
         pMatrix->add(row);
@@ -241,7 +246,7 @@ List2D<T>::List2D(const List2D<T> &other) {
 template <typename T>
 List2D<T>::~List2D() {
     // TODO
-    for (int i = 0; i < pMatrix->size(); i++) {
+    for (int i = 0; i < pMatrix->size(); ++i) {
         delete pMatrix->get(i);
     }
     delete pMatrix;
@@ -256,34 +261,26 @@ int List2D<T>::rows() const {
 template <typename T>
 void List2D<T>::setRow(int rowIndex, const List1D<T> &row) {
     // TODO
-    if (rowIndex < 0 || rowIndex >= pMatrix->size()) {
-        throw out_of_range("Row index out of range");
+    // if (rowIndex < 0 || rowIndex > pMatrix->size()) {
+    //     throw out_of_range("Index is invalid!");
+    // }
+
+    pMatrix->get(rowIndex)->clear();
+    for (int i = 0; i < row.size(); ++i) {
+        pMatrix->get(rowIndex)->add(row.get(i));
     }
-
-    // Delete the existing row to prevent memory leaks
-    delete pMatrix->get(rowIndex);
-
-    // Create a new row
-    XArrayList<T> *newRow = new XArrayList<T>();
-    for (int i = 0; i < row.size(); i++) {
-        newRow->add(row.get(i));
-    }
-
-    // Set the new row at the specified index
-    // (*pMatrix)[rowIndex] = newRow;
-    pMatrix->get(rowIndex) = newRow;
 }
 
 template <typename T>
 T List2D<T>::get(int rowIndex, int colIndex) const {
     // TODO
-    if (rowIndex < 0 || rowIndex >= pMatrix->size()) {
-        throw out_of_range("Row index out of range");
-    }
+    // if (rowIndex < 0 || rowIndex >= pMatrix->size()) {
+    //     throw out_of_range("Index is invalid!");
+    // }
 
     IList<T> *row = pMatrix->get(rowIndex);
     if (colIndex < 0 || colIndex >= row->size()) {
-        throw out_of_range("Column index out of range");
+        throw out_of_range("Index is invalid!");
     }
 
     return row->get(colIndex);
@@ -292,13 +289,13 @@ T List2D<T>::get(int rowIndex, int colIndex) const {
 template <typename T>
 List1D<T> List2D<T>::getRow(int rowIndex) const {
     // TODO
-    if (rowIndex < 0 || rowIndex >= pMatrix->size()) {
-        throw out_of_range("Row index out of range");
-    }
+    // if (rowIndex < 0 || rowIndex >= pMatrix->size()) {
+    //     throw out_of_range("Index is invalid!");
+    // }
 
     List1D<T> result;
     IList<T> *row = pMatrix->get(rowIndex);
-    for (int i = 0; i < row->size(); i++) {
+    for (int i = 0; i < row->size(); ++i) {
         result.add(row->get(i));
     }
     return result;
@@ -309,24 +306,21 @@ string List2D<T>::toString() const {
     // TODO
     stringstream ss;
     ss << "[";
-    for (int i = 0; i < pMatrix->size(); i++) {
+    for (int i = 0; i < pMatrix->size(); ++i) {
         IList<T> *row = pMatrix->get(i);
-        // ss << "[";
-        for (int j = 0; j < row->size(); j++) {
-            if constexpr (std::is_fundamental<T>::value) {
-                ss << row->toString();
-            } else if constexpr (std::is_class<T>::value) {
+        for (int j = 0; j < row->size(); ++j) {
+            if constexpr (is_base_of_v<InventoryAttribute, T>) {
                 ss << row->toString([](T &item) -> string {
                     return item.toString();
                 });
+            } else {
+                ss << row->toString();
             }
-            if (j < row->size() - 1)
+            if ((i != pMatrix->size() - 1) || (j != row->size() - 1)) 
                 ss << ", ";
         }
-        // ss << "]";
-        if (i < pMatrix->size() - 1)
-            ss << ", ";
     }
+
     ss << "]";
     return ss.str();
 }
@@ -336,6 +330,16 @@ ostream &operator<<(ostream &os, const List2D<T> &matrix) {
     // TODO
     os << matrix.toString();
     return os;
+}
+
+template <typename T>
+void List2D<T>::removeAt(int rowIndex) {
+    pMatrix->removeAt(rowIndex);
+}
+
+template <typename T>
+inline void List2D<T>::add(IList<T> *e) {
+    pMatrix->add(e);
 }
 
 // -------------------- InventoryManager Method Definitions --------------------
@@ -364,29 +368,60 @@ int InventoryManager::size() const {
 List1D<InventoryAttribute> InventoryManager::getProductAttributes(int index) const {
     // TODO
     if (index < 0 || index >= attributesMatrix.rows()) {
-        throw out_of_range("Product index out of range");
+        throw out_of_range("Index is invalid!");
     }
     return attributesMatrix.getRow(index);
 }
 
 string InventoryManager::getProductName(int index) const {
     // TODO
+    if (index < 0 || index >= productNames.size()) {
+        throw out_of_range("Index is invalid!");
+    }
+    return productNames.get(index);
 }
 
 int InventoryManager::getProductQuantity(int index) const {
     // TODO
+    if (index < 0 || index >= quantities.size()) {
+        throw out_of_range("Index is invalid!");
+    }
+    return quantities.get(index);
 }
 
 void InventoryManager::updateQuantity(int index, int newQuantity) {
     // TODO
+    if (index < 0 || index >= quantities.size()) {
+        throw out_of_range("Index is invalid!");
+    }
+    quantities.set(index, newQuantity);
 }
 
 void InventoryManager::addProduct(const List1D<InventoryAttribute> &attributes, const string &name, int quantity) {
     // TODO
+    // Create a new row in the attributesMatrix
+    XArrayList<InventoryAttribute> *rowToAdd = new XArrayList<InventoryAttribute>();
+    for (int i = 0; i < attributes.size(); i++) {
+        rowToAdd->add(attributes.get(i));
+    }
+
+    attributesMatrix.add(rowToAdd);
+    productNames.add(name);
+    quantities.add(quantity);
 }
 
 void InventoryManager::removeProduct(int index) {
     // TODO
+    if (index < 0 || index >= size()) {
+        throw out_of_range("Index is invalid!");
+    }
+
+    for (int i = index; i < size() - 1; ++i) {
+        attributesMatrix.setRow(i, attributesMatrix.getRow(i + 1));
+        productNames.add(productNames.get(i + 1));
+        quantities.add(quantities.get(i + 1));
+    }
+    // attributesMatrix.
 }
 
 List1D<string> InventoryManager::query(int attributeName, const double &minValue,

@@ -19,11 +19,11 @@ void (*func_ptr[15])() = {
     xlistDemo2,
     xlistDemo3,
     xlistDemo4,
-    // tc_inventory1001,
-    // tc_inventory1002,
-    // tc_inventory1003,
-    // tc_inventory1004,
-    // tc_inventory1005
+    tc_inventory1001,
+    tc_inventory1002,
+    tc_inventory1003,
+    tc_inventory1004,
+    tc_inventory1005
 };
 
 void run(int func_idx) {
@@ -31,6 +31,6 @@ void run(int func_idx) {
 }
 
 int main(int argc, char **argv) {
-    dlistDemo6();
+    tc_inventory1003();
     return 0;
 }
