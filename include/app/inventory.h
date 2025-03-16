@@ -35,6 +35,9 @@ public:
     template <typename U>
     friend ostream &operator<<(ostream &os, const List1D<U> &list);
     // friend ostream &operator<<(ostream &os, const List1D<T> &list);
+
+    // custom method
+    void clear();
 };
 
 // -------------------- List2D --------------------
@@ -62,12 +65,16 @@ public:
     // template <typename U>
     // friend ostream &operator<<(ostream &os, const List2D<U> &matrix);
     // friend ostream &operator<<(ostream &os, const List2D<T> &matrix);
+
+    // custom method
+    void clear();
 };
 
 struct InventoryAttribute {
     string name;
     double value;
     InventoryAttribute(const string &name = "", double value = 0) : name(name), value(value) {}
+    InventoryAttribute(const InventoryAttribute& other) : name(other.name), value(other.value) {}
     string toString() const { return name + ": " + to_string(value); }
     bool operator==(const InventoryAttribute &other) const {
         return (name == other.name) && (fabs(value - other.value) < 1e-9);
@@ -116,6 +123,9 @@ public:
     List1D<string> getProductNames() const;
     List1D<int> getQuantities() const;
     string toString() const;
+
+    // custom method
+    void clear();
 };
 
 // -------------------- List1D Method Definitions --------------------
@@ -128,7 +138,7 @@ List1D<T>::List1D() {
 template <typename T>
 List1D<T>::List1D(int num_elements) {
     // TODO
-    pList = new XArrayList<T>();
+    pList = new XArrayList<T>(0, 0, num_elements);
     for (int i = 0; i < num_elements; ++i) {
         pList->add(T());
     }
@@ -137,7 +147,7 @@ List1D<T>::List1D(int num_elements) {
 template <typename T>
 List1D<T>::List1D(const T *array, int num_elements) {
     // TODO
-    pList = new XArrayList<T>();
+    pList = new XArrayList<T>(0, 0, num_elements);
     for (int i = 0; i < num_elements; ++i) {
         pList->add(array[i]);
     }
@@ -146,7 +156,7 @@ List1D<T>::List1D(const T *array, int num_elements) {
 template <typename T>
 List1D<T>::List1D(const List1D<T> &other) {
     // TODO
-    pList = new XArrayList<T>();
+    pList = new XArrayList<T>(0, 0, other.size());
     for (int i = 0; i < other.size(); ++i) {
         pList->add(other.get(i));
     }
@@ -214,17 +224,23 @@ void List1D<T>::removeAt(int index) {
     pList->removeAt(index);
 }
 
+template <typename T>
+inline void List1D<T>::clear() {
+    pList->clear();
+}
+
 // -------------------- List2D Method Definitions --------------------
 template <typename T>
 List2D<T>::List2D() {
     // TODO
     pMatrix = new XArrayList<IList<T> *>();
+    // pMatrix->add(new XArrayList<T>());
 }
 
 template <typename T>
 List2D<T>::List2D(List1D<T> *array, int num_rows) {
     // TODO
-    pMatrix = new XArrayList<IList<T> *>();
+    pMatrix = new XArrayList<IList<T> *>(0, 0, num_rows);
     for (int i = 0; i < num_rows; ++i) {
         XArrayList<T> *row = new XArrayList<T>();
         for (int j = 0; j < array[i].size(); ++j) {
@@ -340,8 +356,13 @@ void List2D<T>::removeAt(int rowIndex) {
 }
 
 template <typename T>
-inline void List2D<T>::add(IList<T> *e) {
+void List2D<T>::add(IList<T> *e) {
     pMatrix->add(e);
+}
+
+template <typename T>
+inline void List2D<T>::clear() {
+    pMatrix->clear();
 }
 
 // -------------------- InventoryManager Method Definitions --------------------
@@ -418,18 +439,15 @@ void InventoryManager::removeProduct(int index) {
         throw out_of_range("Index is invalid!");
     }
 
-    for (int i = index; i < size() - 1; ++i) {
-        attributesMatrix.setRow(i, attributesMatrix.getRow(i + 1));
-        productNames.add(productNames.get(i + 1));
-        quantities.add(quantities.get(i + 1));
-    }
-    // attributesMatrix.
+    attributesMatrix.removeAt(index);
+    productNames.removeAt(index);
+    quantities.removeAt(index);
 }
 
 List1D<string> InventoryManager::query(int attributeName, const double &minValue,
                                        const double &maxValue, int minQuantity, bool ascending) const {
     // TODO
-
+    return List1D<string>();
 }
 
 void InventoryManager::removeDuplicates() {
@@ -437,11 +455,11 @@ void InventoryManager::removeDuplicates() {
     for (int i = 0; i < this->size(); i++) {
         for (int j = i + 1; j < this->size(); j++) {
             bool isDuplicate = true;
-            
+
             // Check if product attributes are the same
             List1D<InventoryAttribute> attrsI = getProductAttributes(i);
             List1D<InventoryAttribute> attrsJ = getProductAttributes(j);
-            
+
             if (attrsI.size() != attrsJ.size()) {
                 isDuplicate = false;
             } else {
@@ -452,23 +470,23 @@ void InventoryManager::removeDuplicates() {
                     }
                 }
             }
-            
+
             // Check if names are the same
             if (isDuplicate && productNames.get(i) != productNames.get(j)) {
                 isDuplicate = false;
             }
-            
+
             // If duplicate found, combine quantities and remove the duplicate
             if (isDuplicate) {
                 // Combine quantities
                 int newQuantity = quantities.get(i) + quantities.get(j);
                 quantities.set(i, newQuantity);
-                
+
                 // Remove duplicate product
                 attributesMatrix.removeAt(j);
                 productNames.removeAt(j);
                 quantities.removeAt(j);
-                
+
                 // Adjust index to account for removed item
                 j--;
             }
@@ -479,24 +497,77 @@ void InventoryManager::removeDuplicates() {
 InventoryManager InventoryManager::merge(const InventoryManager &inv1,
                                          const InventoryManager &inv2) {
     // TODO
+    InventoryManager newInventory;
+
+    // First, add all products from inv1
+    for (int i = 0; i < inv1.size(); i++) {
+        newInventory.addProduct(
+            inv1.getProductAttributes(i),
+            inv1.getProductName(i),
+            inv1.getProductQuantity(i));
+    }
+
+    // Then add all products from inv2
+    for (int i = 0; i < inv2.size(); i++) {
+        newInventory.addProduct(
+            inv2.getProductAttributes(i),
+            inv2.getProductName(i),
+            inv2.getProductQuantity(i));
+    }
+
+    return newInventory;
 }
 
 void InventoryManager::split(InventoryManager &section1,
                              InventoryManager &section2,
                              double ratio) const {
     // TODO
+    // Clear section1 and section2 before adding new products
+    // section1 = InventoryManager();
+    // section2 = InventoryManager();
+    section1.clear();
+    section2.clear();
+
+    int totalProducts = this->size();
+    if (totalProducts == 0)
+        return; // Nothing to split
+
+    // Calculate how many products go to section1
+    int sec2Count = static_cast<int>(totalProducts * (1 - ratio));
+    if (sec2Count > totalProducts)
+        sec2Count = totalProducts;
+    int sec1Count = totalProducts - sec2Count;
+
+    // Populate section1
+    for (int i = 0; i < sec1Count; i++) {
+        section1.addProduct(
+            this->getProductAttributes(i),
+            this->getProductName(i),
+            this->getProductQuantity(i));
+    }
+
+    // Populate section2
+    for (int i = sec1Count; i < totalProducts; i++) {
+        section2.addProduct(
+            this->getProductAttributes(i),
+            this->getProductName(i),
+            this->getProductQuantity(i));
+    }
 }
 
 List2D<InventoryAttribute> InventoryManager::getAttributesMatrix() const {
     // TODO
+    return attributesMatrix;
 }
 
 List1D<string> InventoryManager::getProductNames() const {
     // TODO
+    return productNames;
 }
 
 List1D<int> InventoryManager::getQuantities() const {
     // TODO
+    return quantities;
 }
 
 string InventoryManager::toString() const {
@@ -509,6 +580,12 @@ string InventoryManager::toString() const {
        << "Quantities: " << quantities << "\n"
        << "]";
     return ss.str();
+}
+
+void InventoryManager::clear() {
+    attributesMatrix.clear();
+    productNames.clear();
+    quantities.clear();
 }
 
 #endif /* INVENTORY_MANAGER_H */
