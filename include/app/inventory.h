@@ -191,6 +191,10 @@ string List1D<T>::toString() const {
         ss << pList->toString([](T &item) -> string {
             return item.toString();
         });
+    } else if constexpr (is_same_v<T, string>) {
+        ss << pList->toString([](T &item) -> string {
+            return "\"" + item + "\"";
+        });
     } else {
         ss << pList->toString();
     }
@@ -278,12 +282,13 @@ T List2D<T>::get(int rowIndex, int colIndex) const {
     //     throw out_of_range("Index is invalid!");
     // }
 
-    IList<T> *row = pMatrix->get(rowIndex);
-    if (colIndex < 0 || colIndex >= row->size()) {
-        throw out_of_range("Index is invalid!");
-    }
+    // IList<T> *row = pMatrix->get(rowIndex);
+    // if (colIndex < 0 || colIndex >= row->size()) {
+    //     throw out_of_range("Index is invalid!");
+    // }
 
-    return row->get(colIndex);
+    // return row->get(colIndex);
+    return pMatrix->get(rowIndex)->get(colIndex);
 }
 
 template <typename T>
@@ -307,18 +312,15 @@ string List2D<T>::toString() const {
     stringstream ss;
     ss << "[";
     for (int i = 0; i < pMatrix->size(); ++i) {
-        IList<T> *row = pMatrix->get(i);
-        for (int j = 0; j < row->size(); ++j) {
-            if constexpr (is_base_of_v<InventoryAttribute, T>) {
-                ss << row->toString([](T &item) -> string {
-                    return item.toString();
-                });
-            } else {
-                ss << row->toString();
-            }
-            if ((i != pMatrix->size() - 1) || (j != row->size() - 1)) 
-                ss << ", ";
+        if constexpr (is_base_of_v<InventoryAttribute, T>) {
+            ss << pMatrix->get(i)->toString([](T &item) -> string {
+                return item.toString();
+            });
+        } else {
+            ss << pMatrix->get(i)->toString();
         }
+        if (i != pMatrix->size() - 1)
+            ss << ", ";
     }
 
     ss << "]";
@@ -427,10 +429,51 @@ void InventoryManager::removeProduct(int index) {
 List1D<string> InventoryManager::query(int attributeName, const double &minValue,
                                        const double &maxValue, int minQuantity, bool ascending) const {
     // TODO
+
 }
 
 void InventoryManager::removeDuplicates() {
     // TODO
+    for (int i = 0; i < this->size(); i++) {
+        for (int j = i + 1; j < this->size(); j++) {
+            bool isDuplicate = true;
+            
+            // Check if product attributes are the same
+            List1D<InventoryAttribute> attrsI = getProductAttributes(i);
+            List1D<InventoryAttribute> attrsJ = getProductAttributes(j);
+            
+            if (attrsI.size() != attrsJ.size()) {
+                isDuplicate = false;
+            } else {
+                for (int k = 0; k < attrsI.size(); k++) {
+                    if (!(attrsI.get(k) == attrsJ.get(k))) {
+                        isDuplicate = false;
+                        break;
+                    }
+                }
+            }
+            
+            // Check if names are the same
+            if (isDuplicate && productNames.get(i) != productNames.get(j)) {
+                isDuplicate = false;
+            }
+            
+            // If duplicate found, combine quantities and remove the duplicate
+            if (isDuplicate) {
+                // Combine quantities
+                int newQuantity = quantities.get(i) + quantities.get(j);
+                quantities.set(i, newQuantity);
+                
+                // Remove duplicate product
+                attributesMatrix.removeAt(j);
+                productNames.removeAt(j);
+                quantities.removeAt(j);
+                
+                // Adjust index to account for removed item
+                j--;
+            }
+        }
+    }
 }
 
 InventoryManager InventoryManager::merge(const InventoryManager &inv1,
@@ -458,6 +501,14 @@ List1D<int> InventoryManager::getQuantities() const {
 
 string InventoryManager::toString() const {
     // TODO
+    stringstream ss;
+    cout << setprecision(2) << fixed;
+    ss << "InventoryManager[" << endl
+       << "AttributesMatrix: " << attributesMatrix << ",\n"
+       << "ProductNames: " << productNames << ",\n"
+       << "Quantities: " << quantities << "\n"
+       << "]";
+    return ss.str();
 }
 
 #endif /* INVENTORY_MANAGER_H */

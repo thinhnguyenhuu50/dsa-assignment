@@ -43,7 +43,7 @@ void tc_inventory1003() {
 
     List1D<InventoryAttribute> attributesArray[3] = { listAttrA, listAttrB, listAttrC };
     List2D<InventoryAttribute> attributesMatrix(attributesArray, 3);
-
+    
     string namesArray[] = { "Product A", "Product B", "Product C" };
     List1D<string> productNames(namesArray, 3);
     
