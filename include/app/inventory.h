@@ -107,7 +107,7 @@ public:
     void addProduct(const List1D<InventoryAttribute> &attributes, const string &name, int quantity);
     void removeProduct(int index);
 
-    List1D<string> query(int attributeName, const double &minValue,
+    List1D<string> query(string attributeName, const double &minValue,
                          const double &maxValue, int minQuantity, bool ascending) const;
 
     void removeDuplicates();
@@ -438,16 +438,74 @@ void InventoryManager::removeProduct(int index) {
     if (index < 0 || index >= size()) {
         throw out_of_range("Index is invalid!");
     }
-
+    // TODO: CHECK WHETHER THE LIST IS EMPTY
     attributesMatrix.removeAt(index);
     productNames.removeAt(index);
     quantities.removeAt(index);
 }
 
-List1D<string> InventoryManager::query(int attributeName, const double &minValue,
+List1D<string> InventoryManager::query(string attributeName, const double &minValue,
                                        const double &maxValue, int minQuantity, bool ascending) const {
     // TODO
-    return List1D<string>();
+    List1D<string> result;
+    XArrayList<int> matchingIndices;
+
+    // Find products that meet the criteria
+    for (int i = 0; i < size(); i++) {
+        // Check quantity requirement first - efficient short-circuit
+        if (quantities.get(i) < minQuantity) {
+            continue;
+        }
+
+        // Get product attributes and search for the named attribute
+        List1D<InventoryAttribute> attrs = getProductAttributes(i);
+        bool attributeFound = false;
+        
+        for (int j = 0; j < attrs.size(); j++) {
+            InventoryAttribute attr = attrs.get(j);
+            if (attr.name == attributeName) {
+                // Check if attribute value is in range
+                if (attr.value >= minValue && attr.value <= maxValue) {
+                    matchingIndices.add(i);
+                }
+                attributeFound = true;
+                break;
+            }
+        }
+    }
+
+    // Shell sort implementation
+    int n = matchingIndices.size();
+    // Start with a big gap, then reduce the gap
+    for (int gap = n/2; gap > 0; gap /= 2) {
+        // Do a gapped insertion sort
+        for (int i = gap; i < n; i++) {
+            // Save a[i] in temp and make a hole at position i
+            int temp = matchingIndices.get(i);
+            string tempName = productNames.get(temp);
+            
+            // Shift earlier gap-sorted elements up until the correct location for a[i] is found
+            int j;
+            if (ascending) {
+                for (j = i; j >= gap && productNames.get(matchingIndices.get(j - gap)) > tempName; j -= gap) {
+                    matchingIndices.get(j) = matchingIndices.get(j - gap);
+                }
+            } else {
+                for (j = i; j >= gap && productNames.get(matchingIndices.get(j - gap)) < tempName; j -= gap) {
+                    matchingIndices.get(j) = matchingIndices.get(j - gap);
+                }
+            }
+            
+            // Put temp (the original a[i]) in its correct location
+            matchingIndices.get(j) = temp;
+        }
+    }
+
+    // Build result list from sorted indices
+    for (int i = 0; i < matchingIndices.size(); i++) {
+        result.add(productNames.get(matchingIndices.get(i)));
+    }
+    return result;
 }
 
 void InventoryManager::removeDuplicates() {
@@ -523,8 +581,6 @@ void InventoryManager::split(InventoryManager &section1,
                              double ratio) const {
     // TODO
     // Clear section1 and section2 before adding new products
-    // section1 = InventoryManager();
-    // section2 = InventoryManager();
     section1.clear();
     section2.clear();
 

@@ -31,6 +31,6 @@ void run(int func_idx) {
 }
 
 int main(int argc, char **argv) {
-    tc_inventory1007(); 
+    tc_inventory1005(); 
     return 0;
 }
