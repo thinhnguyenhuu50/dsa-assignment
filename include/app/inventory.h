@@ -34,10 +34,10 @@ public:
 
     template <typename U>
     friend ostream &operator<<(ostream &os, const List1D<U> &list);
-    // friend ostream &operator<<(ostream &os, const List1D<T> &list);
 
     // custom method
     void clear();
+    List1D<T> &operator=(const List1D<T> &other);
 };
 
 // -------------------- List2D --------------------
@@ -62,19 +62,19 @@ public:
 
     void removeAt(int rowIndex);
 
-    // template <typename U>
-    // friend ostream &operator<<(ostream &os, const List2D<U> &matrix);
-    // friend ostream &operator<<(ostream &os, const List2D<T> &matrix);
+    template <typename U>
+    friend ostream &operator<<(ostream &os, const List2D<U> &matrix);
 
     // custom method
     void clear();
+    List2D<T> &operator=(const List2D<T> &other);
 };
 
 struct InventoryAttribute {
     string name;
     double value;
     InventoryAttribute(const string &name = "", double value = 0) : name(name), value(value) {}
-    InventoryAttribute(const InventoryAttribute& other) : name(other.name), value(other.value) {}
+    InventoryAttribute(const InventoryAttribute &other) : name(other.name), value(other.value) {}
     string toString() const { return name + ": " + to_string(value); }
     bool operator==(const InventoryAttribute &other) const {
         return (name == other.name) && (fabs(value - other.value) < 1e-9);
@@ -126,6 +126,7 @@ public:
 
     // custom method
     void clear();
+    InventoryManager &operator=(const InventoryManager &other);
 };
 
 // -------------------- List1D Method Definitions --------------------
@@ -197,18 +198,15 @@ string List1D<T>::toString() const {
     // TODO
     stringstream ss;
 
-    if constexpr (is_base_of_v<InventoryAttribute, T>) {
-        ss << pList->toString([](T &item) -> string {
-            return item.toString();
-        });
-    } else if constexpr (is_same_v<T, string>) {
-        ss << pList->toString([](T &item) -> string {
-            return "\"" + item + "\"";
-        });
-    } else {
-        ss << pList->toString();
-    }
-
+    // if constexpr (is_base_of_v<InventoryAttribute, T>) {
+    //     ss << pList->toString([](T &item) -> string {
+    //         return item.toString();
+    //     });
+    // }
+    // else {
+    //     ss << pList->toString();
+    // }
+    ss << pList->toString();
     return ss.str();
 }
 
@@ -229,6 +227,23 @@ inline void List1D<T>::clear() {
     pList->clear();
 }
 
+template <typename T>
+List1D<T> &List1D<T>::operator=(const List1D<T> &other) {
+    if (this == &other) {
+        return *this; // Self-assignment check
+    }
+
+    // Delete old list
+    delete pList;
+
+    // Create new list and copy data
+    pList = new XArrayList<T>(0, 0, other.size());
+    for (int i = 0; i < other.size(); i++) {
+        pList->add(other.get(i));
+    }
+
+    return *this;
+}
 // -------------------- List2D Method Definitions --------------------
 template <typename T>
 List2D<T>::List2D() {
@@ -365,6 +380,29 @@ inline void List2D<T>::clear() {
     pMatrix->clear();
 }
 
+template <typename T>
+List2D<T> &List2D<T>::operator=(const List2D<T> &other) {
+    if (this == &other) {
+        return *this; // Self-assignment check
+    }
+
+    // Delete current matrix contents
+    for (int i = 0; i < pMatrix->size(); ++i) {
+        delete pMatrix->get(i);
+    }
+    pMatrix->clear();
+
+    // Copy data from other matrix
+    for (int i = 0; i < other.rows(); ++i) {
+        XArrayList<T> *row = new XArrayList<T>();
+        for (int j = 0; j < other.pMatrix->get(i)->size(); ++j) {
+            row->add(other.pMatrix->get(i)->get(j));
+        }
+        pMatrix->add(row);
+    }
+
+    return *this;
+}
 // -------------------- InventoryManager Method Definitions --------------------
 InventoryManager::InventoryManager()
     : attributesMatrix(List2D<InventoryAttribute>()), productNames(List1D<string>()), quantities(List1D<int>()) {
@@ -460,7 +498,7 @@ List1D<string> InventoryManager::query(string attributeName, const double &minVa
         // Get product attributes and search for the named attribute
         List1D<InventoryAttribute> attrs = getProductAttributes(i);
         bool attributeFound = false;
-        
+
         for (int j = 0; j < attrs.size(); j++) {
             InventoryAttribute attr = attrs.get(j);
             if (attr.name == attributeName) {
@@ -477,13 +515,13 @@ List1D<string> InventoryManager::query(string attributeName, const double &minVa
     // Shell sort implementation
     int n = matchingIndices.size();
     // Start with a big gap, then reduce the gap
-    for (int gap = n/2; gap > 0; gap /= 2) {
+    for (int gap = n / 2; gap > 0; gap /= 2) {
         // Do a gapped insertion sort
         for (int i = gap; i < n; i++) {
             // Save a[i] in temp and make a hole at position i
             int temp = matchingIndices.get(i);
             string tempName = productNames.get(temp);
-            
+
             // Shift earlier gap-sorted elements up until the correct location for a[i] is found
             int j;
             if (ascending) {
@@ -495,7 +533,7 @@ List1D<string> InventoryManager::query(string attributeName, const double &minVa
                     matchingIndices.get(j) = matchingIndices.get(j - gap);
                 }
             }
-            
+
             // Put temp (the original a[i]) in its correct location
             matchingIndices.get(j) = temp;
         }
@@ -629,11 +667,12 @@ List1D<int> InventoryManager::getQuantities() const {
 string InventoryManager::toString() const {
     // TODO
     stringstream ss;
-    cout << setprecision(2) << fixed;
-    ss << "InventoryManager[" << endl
-       << "AttributesMatrix: " << attributesMatrix << ",\n"
-       << "ProductNames: " << productNames << ",\n"
-       << "Quantities: " << quantities << "\n"
+    ss << "------------------------" << endl
+       << "Product Names: " << productNames << endl
+       << "InventoryManager[" << endl
+       << "  AttributesMatrix: " << attributesMatrix << ",\n"
+       << "  ProductNames: " << productNames << ",\n"
+       << "  Quantities: " << quantities << "\n"
        << "]";
     return ss.str();
 }
@@ -644,4 +683,16 @@ void InventoryManager::clear() {
     quantities.clear();
 }
 
+InventoryManager &InventoryManager::operator=(const InventoryManager &other) {
+    if (this == &other) {
+        return *this; // Self-assignment check
+    }
+
+    // Copy data from other manager
+    attributesMatrix = other.attributesMatrix;
+    productNames = other.productNames;
+    quantities = other.quantities;
+
+    return *this;
+}
 #endif /* INVENTORY_MANAGER_H */
