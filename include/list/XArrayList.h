@@ -17,11 +17,11 @@ public:
     class Iterator; // forward declaration
 
 protected:
-    T *data;                                 // dynamic array to store the list's items
-    int capacity;                            // size of the dynamic array
-    int count;                               // number of items stored in the array
-    bool (*itemEqual)(T &lhs, T &rhs);       // function pointer: test if two items (type: T&) are equal or not
-    void (*deleteUserData)(XArrayList<T> *); // function pointer: be called to remove items (if they are pointer type)
+    T *data;                                     // dynamic array to store the list's items
+    int capacity;                                // size of the dynamic array
+    int count;                                   // number of items stored in the array
+    bool (*itemEqual)(T &lhs, T &rhs) = 0;       // function pointer: test if two items (type: T&) are equal or not
+    void (*deleteUserData)(XArrayList<T> *) = 0; // function pointer: be called to remove items (if they are pointer type)
 
 public:
     XArrayList(
@@ -180,13 +180,12 @@ void XArrayList<T>::copyFrom(const XArrayList<T> &list) {
     // Copy basic attributes
     this->capacity = list.capacity;
     this->count = list.count;
-    if (list.itemEqual)
-        this->itemEqual = list.itemEqual;
-    if (list.deleteUserData)
-        this->deleteUserData = list.deleteUserData;
+    this->itemEqual = list.itemEqual;
+    this->deleteUserData = list.deleteUserData;
 
     // Allocate new memory and copy data
-    delete[] this->data;
+    if (data)
+        delete[] this->data;
     this->data = new T[capacity];
     for (int i = 0; i < count; ++i)
         this->data[i] = list.data[i];
@@ -208,7 +207,7 @@ void XArrayList<T>::removeInternalData() {
 }
 
 template <class T>
-XArrayList<T>::XArrayList(const XArrayList<T> &list) {
+XArrayList<T>::XArrayList(const XArrayList<T> &list) : data(nullptr) {
     // TODO
     copyFrom(list);
 }
@@ -378,6 +377,7 @@ void XArrayList<T>::ensureCapacity(int index) {
     if (index > capacity) {
         try {
             int newCapacity = capacity * 1.5;
+            newCapacity = newCapacity < index ? index : newCapacity;
             T *newData = new T[newCapacity];
             for (int i = 0; i < count; i++)
                 newData[i] = data[i];

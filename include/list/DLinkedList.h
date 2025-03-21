@@ -516,9 +516,8 @@ void DLinkedList<T>::removeInternalData() {
         current = next;
     }
 
-    // delete head;
-    // delete tail;
-    // head = tail = 0;
+    head->next = tail;
+    tail->prev = head;
 }
 
 #endif /* DLINKEDLIST_H */
