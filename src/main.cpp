@@ -6,6 +6,9 @@
 #include <sstream>
 #include <string>
 
+#include "test/test_XArrayList.h"
+#include "test/test_DLinkedList.h"
+
 using namespace std;
 
 void (*func_ptr[15])() = {
@@ -31,6 +34,7 @@ void run(int func_idx) {
 }
 
 int main(int argc, char **argv) {
-    tc_inventory1003(); 
+    TestDLinkedList test;
+    test.runAllTests();
     return 0;
 }

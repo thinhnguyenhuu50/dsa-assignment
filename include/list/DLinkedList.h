@@ -334,8 +334,8 @@ typename DLinkedList<T>::Node *DLinkedList<T>::getPreviousNodeOf(int index) {
      * Efficiently navigates to the node by choosing the shorter path based on the index's position.
      */
     // TODO
-    if (index < 0 || index > count)
-        throw std::out_of_range("Index is out of range!");
+    // if (index < 0 || index > count)
+    //     throw std::out_of_range("Index is out of range!");
 
     Node *node;
     if (index <= count / 2) {
@@ -409,7 +409,7 @@ T &DLinkedList<T>::get(int index) {
 
     // Traverse backward from tail
     BWDIterator it = this->bbegin();
-    while (index--) {
+    while (count - 1 - index++) {
         --it;
     }
     return *it;
@@ -429,7 +429,7 @@ int DLinkedList<T>::indexOf(T item) {
 template <class T>
 bool DLinkedList<T>::removeItem(T item, void (*removeItemData)(T)) {
     // TODO
-    for (Iterator it = begin(); it != end(); it++) {
+    for (Iterator it = DLinkedList::begin(); it != DLinkedList::end(); it++) {
         if (equals(*it, item, this->itemEqual)) {
             it.remove(removeItemData);
             return true;

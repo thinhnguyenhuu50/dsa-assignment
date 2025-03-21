@@ -11,6 +11,8 @@
 
 using namespace std;
 
+#define Abs(x)    ((x) < 0 ? -(x) : (x))
+
 // -------------------- List1D --------------------
 template <typename T>
 class List1D {
@@ -77,7 +79,7 @@ struct InventoryAttribute {
     InventoryAttribute(const InventoryAttribute &other) : name(other.name), value(other.value) {}
     string toString() const { return name + ": " + to_string(value); }
     bool operator==(const InventoryAttribute &other) const {
-        return (name == other.name) && (fabs(value - other.value) < 1e-9);
+        return (name == other.name) && (Abs(value - other.value) < 1e-9);
     }
     friend ostream &operator<<(ostream &os, const InventoryAttribute &attr) {
         os << attr.toString();
