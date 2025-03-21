@@ -201,14 +201,6 @@ string List1D<T>::toString() const {
     // TODO
     stringstream ss;
 
-    // if constexpr (is_base_of_v<InventoryAttribute, T>) {
-    //     ss << pList->toString([](T &item) -> string {
-    //         return item.toString();
-    //     });
-    // }
-    // else {
-    //     ss << pList->toString();
-    // }
     ss << pList->toString();
     return ss.str();
 }
@@ -299,10 +291,6 @@ int List2D<T>::rows() const {
 template <typename T>
 void List2D<T>::setRow(int rowIndex, const List1D<T> &row) {
     // TODO
-    // if (rowIndex < 0 || rowIndex > pMatrix->size()) {
-    //     throw out_of_range("Index is invalid!");
-    // }
-
     pMatrix->get(rowIndex)->clear();
     for (int i = 0; i < row.size(); ++i) {
         pMatrix->get(rowIndex)->add(row.get(i));
@@ -312,31 +300,18 @@ void List2D<T>::setRow(int rowIndex, const List1D<T> &row) {
 template <typename T>
 T List2D<T>::get(int rowIndex, int colIndex) const {
     // TODO
-    // if (rowIndex < 0 || rowIndex >= pMatrix->size()) {
-    //     throw out_of_range("Index is invalid!");
-    // }
-
-    // IList<T> *row = pMatrix->get(rowIndex);
-    // if (colIndex < 0 || colIndex >= row->size()) {
-    //     throw out_of_range("Index is invalid!");
-    // }
-
-    // return row->get(colIndex);
     return pMatrix->get(rowIndex)->get(colIndex);
 }
 
 template <typename T>
 List1D<T> List2D<T>::getRow(int rowIndex) const {
     // TODO
-    // if (rowIndex < 0 || rowIndex >= pMatrix->size()) {
-    //     throw out_of_range("Index is invalid!");
-    // }
-
     List1D<T> result;
-    IList<T> *row = pMatrix->get(rowIndex);
-    for (int i = 0; i < row->size(); ++i) {
-        result.add(row->get(i));
+
+    for (int i = 0; i < pMatrix->get(rowIndex)->size(); ++i) {
+        result.add(this->get(rowIndex, i));
     }
+
     return result;
 }
 
@@ -346,13 +321,7 @@ string List2D<T>::toString() const {
     stringstream ss;
     ss << "[";
     for (int i = 0; i < pMatrix->size(); ++i) {
-        if constexpr (is_base_of_v<InventoryAttribute, T>) {
-            ss << pMatrix->get(i)->toString([](T &item) -> string {
-                return item.toString();
-            });
-        } else {
-            ss << pMatrix->get(i)->toString();
-        }
+        ss << pMatrix->get(i)->toString();
         if (i != pMatrix->size() - 1)
             ss << ", ";
     }
