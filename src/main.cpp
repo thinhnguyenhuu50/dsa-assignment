@@ -8,6 +8,7 @@
 
 #include "test/test_XArrayList.h"
 #include "test/test_DLinkedList.h"
+#include "test/test_Inventory.h"
 
 using namespace std;
 
@@ -34,7 +35,7 @@ void run(int func_idx) {
 }
 
 int main(int argc, char **argv) {
-    TestDLinkedList test;
+    TestInventory test;
     test.runAllTests();
     return 0;
 }
