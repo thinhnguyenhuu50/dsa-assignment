@@ -11,7 +11,7 @@
 
 using namespace std;
 
-#define Abs(x)    ((x) < 0 ? -(x) : (x))
+#define Abs(x) ((x) < 0 ? -(x) : (x))
 
 // -------------------- List1D --------------------
 template <typename T>
@@ -40,6 +40,7 @@ public:
     // custom method
     void clear();
     List1D<T> &operator=(const List1D<T> &other);
+    void add(int index, const T &value) { pList->add(index, value); }
 };
 
 // -------------------- List2D --------------------
@@ -488,62 +489,33 @@ List1D<string> InventoryManager::query(string attributeName, const double &minVa
                                        const double &maxValue, int minQuantity, bool ascending) const {
     // TODO
     List1D<string> result;
-    XArrayList<int> matchingIndices;
+    XArrayList<double> values;
 
-    // Find products that meet the criteria
-    for (int i = 0; i < size(); i++) {
-        // Check quantity requirement first - efficient short-circuit
+    for (int i = 0; i < size(); ++i) {
         if (quantities.get(i) < minQuantity) {
             continue;
         }
-
-        // Get product attributes and search for the named attribute
-        List1D<InventoryAttribute> attrs = getProductAttributes(i);
-        bool attributeFound = false;
-
-        for (int j = 0; j < attrs.size(); j++) {
-            InventoryAttribute attr = attrs.get(j);
+        List1D<InventoryAttribute> attributes = getProductAttributes(i);
+        for (int j = 0; j < attributes.size(); ++j) {
+            InventoryAttribute attr = attributes.get(j);
             if (attr.name == attributeName) {
-                // Check if attribute value is in range
                 if (attr.value >= minValue && attr.value <= maxValue) {
-                    matchingIndices.add(i);
-                }
-                attributeFound = true;
-                break;
-            }
-        }
-    }
-
-    // Shell sort implementation
-    int n = matchingIndices.size();
-    // Start with a big gap, then reduce the gap
-    for (int gap = n / 2; gap > 0; gap /= 2) {
-        // Do a gapped insertion sort
-        for (int i = gap; i < n; i++) {
-            // Save a[i] in temp and make a hole at position i
-            int temp = matchingIndices.get(i);
-            string tempName = productNames.get(temp);
-
-            // Shift earlier gap-sorted elements up until the correct location for a[i] is found
-            int j;
-            if (ascending) {
-                for (j = i; j >= gap && productNames.get(matchingIndices.get(j - gap)) > tempName; j -= gap) {
-                    matchingIndices.get(j) = matchingIndices.get(j - gap);
-                }
-            } else {
-                for (j = i; j >= gap && productNames.get(matchingIndices.get(j - gap)) < tempName; j -= gap) {
-                    matchingIndices.get(j) = matchingIndices.get(j - gap);
+                    int insertPos = result.size() - 1;
+                    if (ascending) {
+                        while (insertPos >= 0 && values.get(insertPos) > attr.value) {
+                            --insertPos;
+                        }
+                    } else {
+                        while (insertPos >= 0 && values.get(insertPos) < attr.value) {
+                            --insertPos;
+                        }
+                    }
+                    result.add(insertPos + 1, productNames.get(i));
+                    values.add(insertPos + 1, attr.value);
+                    break;
                 }
             }
-
-            // Put temp (the original a[i]) in its correct location
-            matchingIndices.get(j) = temp;
         }
-    }
-
-    // Build result list from sorted indices
-    for (int i = 0; i < matchingIndices.size(); i++) {
-        result.add(productNames.get(matchingIndices.get(i)));
     }
     return result;
 }
