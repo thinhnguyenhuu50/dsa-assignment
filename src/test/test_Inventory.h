@@ -294,7 +294,114 @@ public:
         
         cout << "InventoryManager tests passed!" << endl;
     }
-    
+    // Test time complexity of removeDuplicates
+    static void testRemoveDuplicatesComplexity() {
+        cout << "\n=== Testing removeDuplicates Time Complexity ===\n";
+        
+        const int SIZES[] = {100, 200, 400, 800, 1600};
+        const int REPEATS = 5;
+        
+        for (int size : SIZES) {
+            InventoryManager inv;
+            
+            // Generate inventory with many products but only a few unique ones
+            for (int i = 0; i < size; i++) {
+                List1D<InventoryAttribute> attrs;
+                // Only use 10 different prices to ensure duplicates
+                double price = 100.0 + (i % 10) * 100;
+                attrs.add(InventoryAttribute("Price", price));
+                attrs.add(InventoryAttribute("Weight", 1.0));
+                
+                // Only use 10 different product names to ensure duplicates
+                string name = "Product" + to_string(i % 10);
+                inv.addProduct(attrs, name, 1);
+            }
+            
+            // Measure time for removeDuplicates
+            clock_t start = clock();
+            for (int i = 0; i < REPEATS; i++) {
+                // Create a copy to test with
+                InventoryManager testInv = inv;
+                testInv.removeDuplicates();
+            }
+            clock_t end = clock();
+            
+            double elapsed = static_cast<double>(end - start) / CLOCKS_PER_SEC / REPEATS;
+            cout << "Size " << size << ": " << elapsed << " seconds" << endl;
+            
+            // If this is quadratic time, the ratio should be approximately 4
+            // when we double the size
+            if (size > SIZES[0]) {
+                cout << "Ratio to previous: " << (elapsed / static_cast<double>(end - start) / CLOCKS_PER_SEC / REPEATS) << endl;
+            }
+        }
+        
+        // Check that after removing duplicates we have only 10 unique products
+        InventoryManager finalTest;
+        for (int i = 0; i < 100; i++) {
+            List1D<InventoryAttribute> attrs;
+            attrs.add(InventoryAttribute("Price", 100.0 + (i % 10) * 100));
+            finalTest.addProduct(attrs, "Product" + to_string(i % 10), 1);
+        }
+        
+        finalTest.removeDuplicates();
+        assert(finalTest.size() == 10);
+        
+        cout << "removeDuplicates complexity test completed." << endl;
+    }
+
+    // Test worst-case time complexity with many attributes
+    static void testRemoveDuplicatesWorstCase() {
+        cout << "\n=== Testing removeDuplicates Worst Case Time Complexity ===\n";
+        
+        const int SIZES[] = {100, 200, 400, 800};
+        const int REPEATS = 3;
+        
+        for (int size : SIZES) {
+            InventoryManager inv;
+            
+            // Generate inventory with many products with many attributes
+            for (int i = 0; i < size; i++) {
+                List1D<InventoryAttribute> attrs;
+                // Add many attributes to make comparison more expensive
+                for (int j = 0; j < i % 50 + 10; j++) {  // Variable number of attributes
+                    attrs.add(InventoryAttribute("Attr" + to_string(j), j * 1.5));
+                }
+                
+                // Only use 10 different product names to ensure duplicates
+                string name = "Product" + to_string(i % 10);
+                inv.addProduct(attrs, name, 1);
+            }
+            
+            // Measure time for removeDuplicates
+            clock_t start = clock();
+            for (int i = 0; i < REPEATS; i++) {
+                // Create a copy to test with
+                InventoryManager testInv = inv;
+                testInv.removeDuplicates();
+            }
+            clock_t end = clock();
+            
+            double elapsed = static_cast<double>(end - start) / CLOCKS_PER_SEC / REPEATS;
+            cout << "Size " << size << " with many attributes: " << elapsed << " seconds" << endl;
+            
+            // For quadratic complexity, when doubling the input size, time should roughly quadruple
+            if (size > SIZES[0]) {
+                double previousTimeForHalfSize = 0;
+                for (int j = 0; j < sizeof(SIZES)/sizeof(SIZES[0]); j++) {
+                    if (SIZES[j] == size/2) {
+                        // This would be a very rough estimate and should be improved
+                        cout << "Ratio compared to half size: " << elapsed / previousTimeForHalfSize 
+                             << " (expect ~4 for O(n^2))" << endl;
+                        break;
+                    }
+                    previousTimeForHalfSize = elapsed;
+                }
+            }
+        }
+        
+        cout << "removeDuplicates worst case complexity test completed." << endl;
+    }
     // Run all tests
     static void runAllTests() {
         cout << "\n=== Running All Inventory Tests ===\n";

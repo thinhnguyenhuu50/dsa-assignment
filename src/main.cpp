@@ -36,7 +36,6 @@ void run(int func_idx) {
 
 int main(int argc, char **argv) {
     TestInventory test;
-    test.runAllTests();
-    // tc_inventory1004();
+    test.testRemoveDuplicatesWorstCase();
     return 0;
 }

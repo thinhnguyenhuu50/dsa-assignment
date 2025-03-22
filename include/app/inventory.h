@@ -499,7 +499,10 @@ void InventoryManager::removeDuplicates() {
             List1D<InventoryAttribute> attrsI = getProductAttributes(i);
             List1D<InventoryAttribute> attrsJ = getProductAttributes(j);
 
-            if (attrsI.size() != attrsJ.size()) {
+            // Check if names are the same
+            if (productNames.get(i) != productNames.get(j)) {
+                isDuplicate = false;
+            } else if (attrsI.size() != attrsJ.size()) {
                 isDuplicate = false;
             } else {
                 for (int k = 0; k < attrsI.size(); k++) {
@@ -508,11 +511,6 @@ void InventoryManager::removeDuplicates() {
                         break;
                     }
                 }
-            }
-
-            // Check if names are the same
-            if (isDuplicate && productNames.get(i) != productNames.get(j)) {
-                isDuplicate = false;
             }
 
             // If duplicate found, combine quantities and remove the duplicate
