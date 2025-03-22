@@ -608,9 +608,8 @@ List1D<int> InventoryManager::getQuantities() const {
 string InventoryManager::toString() const {
     // TODO
     stringstream ss;
-    ss << "------------------------" << endl
-       << "Product Names: " << productNames << endl
-       << "InventoryManager[" << endl
+
+    ss << "InventoryManager[" << endl
        << "  AttributesMatrix: " << attributesMatrix << ",\n"
        << "  ProductNames: " << productNames << ",\n"
        << "  Quantities: " << quantities << "\n"
